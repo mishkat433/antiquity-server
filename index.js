@@ -27,6 +27,12 @@ async function run() {
 
         // ---------------------- product section ----------------------------
 
+        app.get('/allProduct', async (req, res) => {
+            const query = {}
+            const result = await productsCollection.find(query).toArray()
+            res.send(result)
+        })
+
         app.post("/addProduct", async (req, res) => {
             const data = req.body
             console.log(data);
