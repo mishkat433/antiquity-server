@@ -9,8 +9,6 @@ app.use(cors())
 app.use(express.json())
 
 
-
-
 app.get('/', (req, res) => {
     res.send("server is running")
 })
@@ -20,41 +18,74 @@ const uri = `mongodb+srv://${process.env.DBUSER_NAME}:${process.env.DBUSER_PASSW
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 
-
-
 async function run() {
     try {
         const productsCollection = client.db("antiquity").collection("products");
         const userCollection = client.db("antiquity").collection("user");
-        const chartCollection = client.db("antiquity").collection("ChartData");
-        const imageCollection = client.db("antiquity").collection("image");
-        const tableCollection = client.db("antiquity").collection("table");
+        const tableUserCollection = client.db("antiquity").collection("tableUser");
 
 
-        // ---------------------- Category section ----------------------------
+        // ---------------------- product section ----------------------------
 
-        app.get("/products", async (req, res) => {
-            const query = {}
-            const result = await productsCollection.find(query).toArray()
+        app.post("/addProduct", async (req, res) => {
+            const data = req.body
+            console.log(data);
+            const result = await productsCollection.insertOne(data)
             res.send(result)
         })
 
 
-        // ---------------------- data table section ----------------------------
+        // ---------------------- user table section ----------------------------
 
-        app.get('/tableData', async (req, res) => {
+        app.get('/getAllUser', async (req, res) => {
             const query = {}
-            const result = await tableCollection.find(query).toArray()
+            const result = await tableUserCollection.find(query).toArray();
+            res.send(result)
+
+        })
+
+        app.get('/singleUser/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const result = await tableUserCollection.findOne(filter)
+            res.send(result)
+
+        })
+
+        app.post('/addUser', async (req, res) => {
+            const data = req.body
+            const result = await tableUserCollection.insertOne(data)
             res.send(result)
         })
 
-        // ---------------------- chart section ----------------------------
-
-        app.get("/chartData", async (req, res) => {
-            const query = {}
-            const result = await chartCollection.find(query).toArray()
+        app.put("/updateUser/:id", async (req, res) => {
+            const id = req.params.id
+            const data = req.body
+            const filter = { _id: ObjectId(id) }
+            // const options = { upsert: true }
+            const updateUser = {
+                $set: {
+                    image: data.image,
+                    data: {
+                        name: data.data.name,
+                        email: data.data.email,
+                        role: data.data.role,
+                        plan: data.data.plan,
+                        staus: data.data.staus,
+                    }
+                }
+            }
+            const result = await tableUserCollection.updateOne(filter, updateUser)
             res.send(result)
         })
+
+        app.delete("/deleteUser/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await tableUserCollection.deleteOne(query)
+            res.send(result)
+        })
+
 
         //------------------- photo Manage ------------------------
 
